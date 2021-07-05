@@ -1,45 +1,42 @@
-var http = require('http');
-const express = require("express"),
-    app = express();
-var tmp =0;
+const https = require('https');
 
+const options = {
+  host: 'jsonplaceholder.typicode.com',
+  path: '/users/1',
+  method: 'PUT',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json; charset=UTF-8'
+  }
+};
 
-http.createServer(function (req, res) {  
-var receivedText="";
+const request = https.request(options, (res) => {
+  if (res.statusCode !== 200) {
+    console.error(`Did not get an OK from the server. Code: ${res.statusCode}`);
+    res.resume();
+    return;
+  }
 
-let request = http.get('http://58af0692ea1c.mylabserver.com:30081/api/v1/status/tsdb', (res2) => {
-    if (res2.statusCode !== 200) {
-        console.error(`Did not get an OK from the server. Code: ${res.statusCode}`);
-        res2.resume();
-        return;
-    }
+  let data = '';
 
-    let data = '';
+  res.on('data', (chunk) => {
+    data += chunk;
+  });
 
-    res2.on('data', (chunk) => {
-        data += chunk;
-    });
-
-    res2.on('close', () => {
-        console.log('Retrieved all data');
-        //console.log(JSON.parse(data));
-        //receivedText = JSON.parse(data);
-        console.log(data);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(data);
-        //return data;
-    });
+  res.on('close', () => {
+    console.log('Updated data');
+    console.log(JSON.parse(data));
+  });
 });
 
- 
-/*request.on('error', (err) => {
-    console.error(`Encountered an error trying to make a request: ${err.message}`);
-});*/
-tmp ++;
-//res.write(receivedText);
-//res.end('Hello World!'+ tmp );
-//res.writeHead(200, { 'Content-Type': 'application/json' });
-//console.log("* "+request);
-//res.end(receivedText);
-}).listen(3006);
+const requestData = {
+  username: 'digitalocean'
+};
 
+request.write(JSON.stringify(requestData));
+
+request.end();
+
+request.on('error', (err) => {
+  console.error(`Encountered an error trying to make a request: ${err.message}`);
+});
